@@ -12,4 +12,5 @@ struct ErrorMessages {
     static let passwordRequired     = "Password is required."
     static let responseErrorTryAgain        = "Something went wrong. Please try again"
 
+    static let requiredError        = "Please enter all the details."
 }
