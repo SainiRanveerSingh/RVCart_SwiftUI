@@ -39,4 +39,66 @@ final class LoginViewModel: ObservableObject {
         
     }
     
+    func userLogin() async -> ( responseData: LoginResponse,status: Bool,message: String ) {
+        
+        let loginData = LoginResponse(accessToken: "", refreshToken: "")
+        guard !emailText.isEmpty, !passwordText.isEmpty else {
+            errorMessage = ErrorMessages.requiredError
+            self.isInvalidUser = true
+            return (loginData, false, ErrorMessages.requiredError)
+        }
+        
+        guard isEmailValid else {
+            errorMessage = ErrorMessages.validMail
+            self.isInvalidUser = true
+            return (loginData, false, ErrorMessages.validMail)
+        }
+        
+        isLoading = true
+        let param = ["email": emailText, "password": passwordText]
+        //TODO: Testing
+        //let param = ["email": "john@mail.com", "password": "changeme"]
+        let requestBody = try? JSONSerialization.data(withJSONObject: param, options: .prettyPrinted)
+        guard let requestUrl = URL(string: APPURL.Urls.Login) else
+        {
+            return (loginData, false, "Please try again.")
+        }
+        
+         var request = URLRequest(url: requestUrl)
+         
+         request.httpMethod = "POST"
+         request.httpBody = requestBody
+         //Authorization: Bearer {your_access_token}
+        /*
+         if addAccessToken {
+         let token = KeychainSecure.instance.getToken(forKey: "accessToken") ?? ""
+         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+         }
+        */
+         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+         request.addValue("application/json", forHTTPHeaderField: "Accept")
+         
+//        let escapedSearchTerm = searchTerm.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? ""
+//        let url = URL(string: APPURL.Urls.Login)!
+        do {
+            //let (data, _) = try await URLSession.shared.data(for: request)
+            let (data, _) = try await URLSession.shared.data(for: request as URLRequest)//data(from: url)
+            //--
+            
+            if let dataValue = try? JSONDecoder().decode(FailureResponse.self, from: data) {
+                print(dataValue.message)
+                return (loginData, false, ErrorMessages.responseErrorTryAgain)
+            }
+            else if let dataValue = try? JSONDecoder().decode(LoginResponse.self, from: data) {
+                print(dataValue.accessToken)
+                return (dataValue, true, "Data Received")
+            }
+            //--
+        }
+        catch {
+            return (loginData, false, ErrorMessages.responseErrorTryAgain)
+        }
+        return (loginData, false, ErrorMessages.responseErrorTryAgain)
+    }
+    
 }

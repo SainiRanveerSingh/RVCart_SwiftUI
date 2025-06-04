@@ -55,8 +55,8 @@ struct LoginView: View {
                     
                     Button(action: {
                         print("Sign In Tapped with email: \(viewModel.emailText), password: \(viewModel.passwordText)")
-                        viewModel.login { status in
-                            print(status ?? "User Login Status")
+                        Task {
+                            await login()
                         }
                         //showChatView = true
                     }) {
@@ -105,6 +105,15 @@ struct LoginView: View {
         .navigationBarTitle("")
         .navigationBarHidden(true)
         }
+    
+    func login() async {
+        let response = await viewModel.userLogin()
+        if response.status {
+            print(response.message)
+        } else {
+            print(response.message)
+        }
+    }
 }
 
 #Preview {
